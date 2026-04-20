@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Emprunts{% endblock %}
+
+{% block content %}
+<h2>📋 Gestion des Emprunts</h2>
+
+<!-- ✅ CONDITIONNELS -->
+{% if user.is_authenticated %}
+    <p>👋 {{ user.username }} | <a href="{% url 'comptes:logout' %}">Déconnexion</a></p>
+{% else %}
+    <p><a href="{% url 'comptes:login' %}"> Se connecter pour gère</a></p>
+{% endif %}
+
+<!-- Formulaire MASQUÉ si non connecté -->
+<form id="emprunt-form" {% if not user.is_authenticated %}style="display:none;"{% endif %}>
+    <input type="text" id="nom_lecteur" placeholder="Nom du lecteur" required>
+    <input type="number" id="livre_id" placeholder="ID Livre" required>
+    <button type="submit">Emprunter</button>
+</form>
+
+<h3>Liste des emprunts</h3>
+<ul id="emprunts-list"></ul>
+
+<script>
+const API_URL = "/api/emprunts/";
+let isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
+function loadEmprunts() {
+    fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("emprunts-list");
+            list.innerHTML = "";
+            data.forEach(emprunt => {
+                const retour = emprunt.date_retour ? 
+                    `Retour: ${emprunt.date_retour}` : 
+                    `${isAuthenticated ? '<button onclick="marquerRetour(' + emprunt.id + ')">Marquer retourné</button>' : ''}`;
+                
+                list.innerHTML += `
+                    <li>
+                        <strong>${emprunt.nom_lecteur}</strong>
+                        <br>Livre: ${emprunt.livre}
+                        <br>Emprunt: ${emprunt.date_emprunt}
+                        <br>${retour}
+                    </li>
+                `;
+            });
+        });
+}
+
+// Ajouter emprunt
+document.getElementById('emprunt-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        nom_lecteur: document.getElementById('nom_lecteur').value,
+        livre: parseInt(document.getElementById('livre_id').value)
+    };
+
+    fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(() => {
+        document.getElementById('emprunt-form').reset();
+        loadEmprunts();
+    });
+});
+
+// Marquer retour
+function marquerRetour(id) {
+    fetch(API_URL + id + '/', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date_retour: new Date().toISOString().split('T')[0] })
+    })
+    .then(() => loadEmprunts());
+}
+
+loadEmprunts();
+</script>
+{% endblock %}

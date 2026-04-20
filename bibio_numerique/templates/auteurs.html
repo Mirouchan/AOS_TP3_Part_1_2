@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Auteurs{% endblock %}
+
+{% block content %}
+<h2>👤 Auteurs</h2>
+
+<!-- ✅ CONDITIONNELS AUTH -->
+{% if user.is_authenticated %}
+    <p>👋 Bienvenue {{ user.username }} | <a href="{% url 'comptes:logout' %}">🚪 Déconnexion</a></p>
+{% else %}
+    <p><a href="{% url 'comptes:login' %}"> Se connecter pour gère</a></p>
+{% endif %}
+
+<!-- ✅ FORMULAIRE MASQUÉ si non connecté -->
+<form id="formA" {% if not user.is_authenticated %}style="display:none;"{% endif %}>
+    <input id="nom" placeholder="Nom *" required>
+    <input id="prenom" placeholder="Prénom *" required>
+    <input id="nationalite" placeholder="Nationalité">
+    <input id="date_naissance" type="date" required>
+    <textarea id="bio" placeholder="Biographie"></textarea>
+    <button>Ajouter</button>
+</form>
+
+<ul id="listA">Chargement...</ul>
+
+<script>
+const API = '/api/auteurs/';
+let isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
+async function load() {
+    try {
+        const r = await fetch(API);
+        const d = await r.json();
+        document.getElementById('listA').innerHTML = d.map(a => `
+<li>
+    <strong>${a.prenom} ${a.nom}</strong>
+    ${a.nationalite ? `<small>(${a.nationalite})</small>` : ''}
+    ${a.date_naissance ? `<br><small>Né(e) le ${a.date_naissance}</small>` : ''}
+    ${a.biographie ? `<br><small>${a.biographie}</small>` : ''}
+    ${isAuthenticated ? `<button onclick="del(${a.id})">🗑️ Supprimer</button>` : ''}
+</li>`).join('');
+    } catch (error) {
+        document.getElementById('listA').innerHTML = '<li>Erreur chargement</li>';
+    }
+}
+
+document.getElementById('formA').onsubmit = async e => {
+    e.preventDefault();
+    try {
+        const f = {
+            nom: document.getElementById('nom').value,
+            prenom: document.getElementById('prenom').value,
+            nationalite: document.getElementById('nationalite').value || null,
+            date_naissance: document.getElementById('date_naissance').value,
+            biographie: document.getElementById('bio').value || null
+        };
+        const response = await fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(f)
+        });
+        if (response.ok) {
+            document.getElementById('formA').reset();
+            load();
+        } else {
+            alert('Erreur ajout');
+        }
+    } catch (error) {
+        alert('Erreur réseau');
+    }
+};
+
+async function del(id) {
+    if (confirm('Supprimer cet auteur ?')) {
+        try {
+            const response = await fetch(`/api/auteurs/${id}/supprimer/`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                load();  // Reload liste
+            } else {
+                alert('Erreur suppression');
+            }
+        } catch (error) {
+            alert('Erreur réseau');
+        }
+    }
+}
+
+load();  // Initial load
+</script>
+{% endblock %}

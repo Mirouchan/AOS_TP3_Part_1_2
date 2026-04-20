@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bibliothèque Numérique{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>📚 Bibliothèque Numérique</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="{% url 'auteurs' %}">👤 Auteurs</a></li>
+            <li><a href="{% url 'livres' %}">📖 Livres</a></li>
+            <li><a href="{% url 'emprunts' %}">📋 Emprunts</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2024 - Bibliothèque Numérique</p>
+    </footer>
+</body>
+</html>
