@@ -11,13 +11,17 @@ User = get_user_model()
 def register(request):
     username = request.data.get('username')
     password = request.data.get('password')
-    role = request.data.get('role', 'lecteur')
+    role = request.data.get('role')
 
     user = User.objects.create_user(username=username, password=password)
     user.role = role
     user.save()
 
-    group = Group.objects.get(name='Lecteur' if role == 'lecteur' else 'Bibliothecaire')
+    if role == "bibliothecaire":
+        group = Group.objects.get(name="Bibliothecaire")
+    else:
+        group = Group.objects.get(name="Lecteur")
+        
     user.groups.add(group)
 
     return Response({"message": "User created"})
