@@ -1,9 +1,7 @@
 from django.urls import path
-from . import views
-
-app_name = 'comptes'  # ← AJOUTER CETTE LIGNE
+from .views import register, login
 
 urlpatterns = [
-    path('login/', views.CustomLoginView.as_view(), name='login'),
-    path('logout/', views.logout_view, name='logout'),
+    path('register/', register),
+    path('login/', login),
 ]
